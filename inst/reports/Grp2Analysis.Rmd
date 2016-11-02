@@ -79,7 +79,9 @@ imageWithLabels(t(log2(grp2$proteinIntensity)), col.labels = NULL, col=quantable
 
 ```{r, fig.cap="# of missing values per protein"}
 plot(table(missing))
-
+# do we miss something here? this gives errors?
+# library shiny? only in the report generation?
+#shiny::Progress(0.1, "Summary")
 progress(0.1, "Summary")
 
 ```
@@ -97,6 +99,7 @@ library(ggplot2)
 library(reshape2)
 longm <- melt(log2(grp2$proteinIntensity))
 
+#ggplotting
 p <- qplot( variable , value , data=longm , geom="violin" , xlab="" , ylab="log2(I)")
 p + stat_summary(fun.y=median,geom='point') +theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
@@ -120,6 +123,7 @@ are normalized. Large differences in the scaling factors are critical.
 par(mfrow=c(2,1))
 par(mar=c(3,10,3,3))
 
+# here unclear for me what are these median corrections..  and stdev corrections
 barplot(grp2$getNormalized()$medians,horiz=T,las=2, main="median correction", cex.names = 0.6)
 barplot(grp2$getNormalized()$mads,horiz=T, las=2 , main="standard deviation correction", cex.names = 0.6)
 
@@ -145,7 +149,8 @@ CVs <- rbind(data.frame(condition=grp2$conditions[1], cv=cond1),
              data.frame(condition=grp2$conditions[2],cv=cond2 ),
              data.frame(condition="all", cv=all))
 
-p <- qplot( condition , cv , data=CVs , geom="violin" , xlab="" , ylab="log2(I)")
+# jonas: change y-label
+p <- qplot( condition , cv , data=CVs , geom="violin" , xlab="" , ylab="Coefficients of variation")
 p + stat_summary(fun.y=median,geom='point') + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 ```
@@ -168,8 +173,10 @@ cond2 <- apply(cond2, 1, sd, na.rm=TRUE)
 all <- apply( grp2$getNormalized()$data, 1 , sd, na.rm=TRUE )
 SDs<-rbind(data.frame( condition=grp2$conditions[1], sd=cond1), data.frame(condition=grp2$conditions[2],sd=cond2 ), data.frame(condition="all", sd=all))
 
-p <- qplot( condition , sd , data=SDs , geom="violin" , xlab="" , ylab="log2(I)")
+#jonas: question: I would expect the Stdevs to be larger.. also the normalized values look like normalized in a completely different way than I would expect..
+p <- qplot( condition , sd , data=SDs , geom="violin" , xlab="" , ylab="standard deviations")
 p + stat_summary(fun.y=median,geom='point') + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 
 ```
 
@@ -213,6 +220,7 @@ Here we show for the normalized matrices the result of a
 two group analysis using bioconductor limma. 
 
 ```{r include=FALSE}
+#jonas: Why this name?
 fixcols <- function(resRel, fcname = "log2(Cond/Cont)", name = "qvalue", top = 20){
   resRel<-do.call("rbind", resRel)
   rownames(resRel) <- NULL
@@ -232,7 +240,9 @@ fixcols <- function(resRel, fcname = "log2(Cond/Cont)", name = "qvalue", top = 2
 Significant calls are made with q Value smaller 0.01 (false discovery rate, computed with bioconductor package qvalue). 
 
 ```{r fig.width=10, fig.height=8, dpi=300, fig.cap="VolcanoPlot for normalized and scaled proteins with stringent thresholds. x axis log2 fold change"}
-fcname = paste("log2(",grp2$getConditions()$condition,"/",grp2$getConditions()$reference,")",sep="")
+#jonas: quick fix.. looks like we generate a vector of 2 chars.. -> we need only one I give arbitrary 
+#fcname = paste("log2(",grp2$getConditions()$condition,"/",grp2$getConditions()$reference,")",sep="")
+fcname = "log2(group_1/group_2)"
 res.eb <-grp2$getPValues()
 resStr <-quantable::volcanoplot(res.eb$logFC, res.eb$q.mod, foldchangethresh = grp2$qfoldchange , pthresh = grp2$qvalue ,labels=rownames(res.eb),xlab = fcname)
 
@@ -242,6 +252,7 @@ resStr <-quantable::volcanoplot(res.eb$logFC, res.eb$q.mod, foldchangethresh = g
 
 ```{r results="markup"}
 if(!is.null(resStr)){
+  #jonas: here we get an error 
   resStr<-fixcols(resStr,fcname = fcname, name="moderated qvalue")
   knitr::kable(resStr, caption = "Most significant regulated proteins.")
 }

@@ -43,11 +43,18 @@ shinyServer(function(input, output) {
 
 
       library(SRMService)
-
+      # these libraries are necessairy .. added by jonas (20161101)
+      library(limma)
+      library(qvalue)
+         
       grp2 <- Grp2Analysis(annotation, input$experimentID , maxNA=input$maxMissing  , nrPeptides=input$peptides)
       grp2$setMQProteinGroups(protein)
-      print("rendering the ting")
-      out <- rmarkdown::render('C:/Users/wolski/prog/SRMService/inst/reports/Grp2Analysis.Rmd', output_format = "pdf_document")
+      # debugging. added by jonas (20161101)
+
+      print("rendering the thing locally in working dir")
+      myWD <- getwd()
+      print(paste("yourWD: ", myWD, sep=""))
+      out <- rmarkdown::render('../../reports/Grp2Analysis.Rmd', output_format = "pdf_document")
       file.rename(out, file)
     }
   )
